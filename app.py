@@ -285,6 +285,7 @@ def render_board():
 
             cell_text_color = "#153e75" if (is_fixed or label) else "#999"
 
+            # Use plain links (query params) instead of inline JS onclick (Streamlit blocks JS)
             html += f'''<td style="
                 width:60px; height:60px;
                 text-align:center; vertical-align:middle;
@@ -297,8 +298,8 @@ def render_board():
                 color:{cell_text_color};
                 padding:0;
                 transition:background-color 0.2s;
-            " onclick="alert('Klick auf Feld {row},{col}'); document.getElementById('select_{row}_{col}').click();">
-                {label}
+            ">
+                <a href="?r={row}&c={col}" style="display:block; width:100%; height:100%; color:inherit; text-decoration:none;">{label}</a>
             </td>'''
 
         html += '</tr>'
@@ -307,18 +308,7 @@ def render_board():
 
     st.markdown(html, unsafe_allow_html=True)
 
-    # Hidden buttons for cell selection
-    for row in range(GRID_SIZE):
-        cols = st.columns([1] * 9, gap="small")
-        for col in range(GRID_SIZE):
-            if cols[col].button(
-                " ",
-                key=f"select_{row}_{col}",
-                use_container_width=True,
-                disabled=False,
-            ):
-                set_selected_cell(row, col)
-                st.rerun()
+    # No hidden buttons any more (we use query-params links in the HTML grid)
 
 
 def render_controls():
@@ -363,11 +353,16 @@ def render_controls():
         label_visibility="collapsed",
         placeholder="1-9, 0=löschen"
     )
-    if keyboard_input and keyboard_input in "0123456789":
-        if keyboard_input == "0":
-            clear_selected_cell()
-        else:
-            place_number(int(keyboard_input))
+    if keyboard_input:
+        try:
+            parsed = int(keyboard_input)
+        except Exception:
+            parsed = None
+        if parsed is not None and 0 <= parsed <= 9:
+            if parsed == 0:
+                clear_selected_cell()
+            else:
+                place_number(parsed)
 
 
 def main():
@@ -379,6 +374,20 @@ def main():
     )
 
     init_state()
+
+    # Handle cell selection via query params (links from the HTML grid)
+    params = st.experimental_get_query_params()
+    if "r" in params and "c" in params:
+        try:
+            r = int(params.get("r")[0])
+            c = int(params.get("c")[0])
+            if 0 <= r < GRID_SIZE and 0 <= c < GRID_SIZE:
+                set_selected_cell(r, c)
+            # clear query params to avoid repeated selection on rerun
+            st.experimental_set_query_params()
+        except Exception:
+            # ignore malformed params
+            pass
 
     # CSS mit Beige-Farbschema
     st.markdown("""
