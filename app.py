@@ -264,28 +264,27 @@ def render_board():
     st.caption("Tippe ein Feld an und setze unten die Zahl.")
 
     # Render grid using Streamlit buttons (no links, no page navigation)
-    grid_container = st.container()
-    with grid_container:
-        for row in range(GRID_SIZE):
-            cols = st.columns(GRID_SIZE, gap="small")
-            for col in range(GRID_SIZE):
-                value = board[row][col]
-                label = " " if value == 0 else str(value)
+    st.markdown('<div id="sudoku-grid">', unsafe_allow_html=True)
+    for row in range(GRID_SIZE):
+        cols = st.columns(GRID_SIZE, gap="small")
+        for col in range(GRID_SIZE):
+            value = board[row][col]
+            label = " " if value == 0 else str(value)
 
-                is_fixed = (row, col) in st.session_state.fixed_cells
-                is_selected = selected == (row, col)
+            is_fixed = (row, col) in st.session_state.fixed_cells
+            is_selected = selected == (row, col)
 
-                # Visual indicator in label for fixed/selected (kept minimal)
-                display_label = label
+            display_label = label
+            if is_selected:
+                display_label = f"[{label}]"
 
-                disabled = st.session_state.game_locked
+            disabled = st.session_state.game_locked
+            key = f"cell-{row}-{col}-{st.session_state.show_solution}"
 
-                # Create a unique key for each cell
-                key = f"cell-{row}-{col}-{st.session_state.show_solution}"
-
-                clicked = cols[col].button(display_label, key=key, use_container_width=True, disabled=disabled)
-                if clicked:
-                    set_selected_cell(row, col)
+            clicked = cols[col].button(display_label, key=key, use_container_width=True, disabled=disabled)
+            if clicked:
+                set_selected_cell(row, col)
+    st.markdown('</div>', unsafe_allow_html=True)
 
 
 def render_controls():
@@ -406,6 +405,28 @@ def main():
         background-color: #fffaf2 !important;
         color: #1f2933 !important;
         border: 1px solid #e0dace !important;
+    }
+    /* Sudoku grid cell styling inside the sudoku-grid container */
+    #sudoku-grid .stButton>button {
+        background-color: #fffaf2 !important;
+        color: #153e75 !important;
+        border: 1px solid #c5c2b9 !important;
+        border-radius: 6px !important;
+        width: 56px !important;
+        height: 56px !important;
+        padding: 0 !important;
+        font-size: 18px !important;
+        font-weight: 700 !important;
+    }
+    #sudoku-grid .stButton>button:disabled {
+        opacity: 1 !important;
+    }
+    @media (max-width: 480px) {
+        #sudoku-grid .stButton>button {
+            width: 40px !important;
+            height: 40px !important;
+            font-size: 14px !important;
+        }
     }
     </style>
     """, unsafe_allow_html=True)
