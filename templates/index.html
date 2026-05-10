@@ -37,7 +37,12 @@
                 <button id="reset-btn" class="secondary-btn">↻ Reset</button>
             </div>
 
-            <div id="status-box" class="status info">Bereit</div>
+                <div class="timer-row">
+                    <div id="timer" class="timer">00:00</div>
+                    <div id="level-badge" class="level-badge">Anfänger</div>
+                </div>
+
+                <div id="status-box" class="status info">Bereit</div>
             <div id="hint-box" class="status hint hidden"></div>
         </section>
 
@@ -63,6 +68,18 @@
         </footer>
     </div>
 
-    <script src="{{ url_for('static', path='app.js') }}"></script>
+    <div id="end-overlay" class="overlay hidden" aria-hidden="true">
+        <div class="overlay-card">
+            <div class="overlay-title">Geschafft!</div>
+            <div id="summary-time" class="overlay-row"></div>
+            <div id="summary-level" class="overlay-row"></div>
+            <div class="overlay-actions">
+                <button id="overlay-new-game" class="primary-btn">Neues Spiel</button>
+                <button id="overlay-close" class="secondary-btn">Schliessen</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="{{ url_for('static', path='app.js') }}?v=2"></script>
 </body>
 </html>

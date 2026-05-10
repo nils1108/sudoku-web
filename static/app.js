@@ -13,6 +13,8 @@ const state = {
     hintUsed: false,
     status: "Bereit",
     hintText: "",
+    timerSeconds: 0,
+    timerInterval: null,
 };
 
 const el = {
@@ -27,7 +29,20 @@ const el = {
     selectionBox: document.getElementById("selection-box"),
     grid: document.getElementById("sudoku-grid"),
     numberPad: document.getElementById("number-pad"),
+    timerEl: document.getElementById("timer"),
+    levelBadge: document.getElementById("level-badge"),
+    endOverlay: document.getElementById("end-overlay"),
+    summaryTime: document.getElementById("summary-time"),
+    summaryLevel: document.getElementById("summary-level"),
+    overlayNewGame: document.getElementById("overlay-new-game"),
+    overlayClose: document.getElementById("overlay-close"),
 };
+
+function getLevelByTime(seconds) {
+    if (seconds < 180) return "Meister";
+    if (seconds < 420) return "Fortgeschritten";
+    return "Anfänger";
+}
 
 function deepCopyBoard(board) {
     return board.map((row) => row.slice());
@@ -60,6 +75,56 @@ function setHint(message) {
         el.hintBox.textContent = "";
         el.hintBox.classList.add("hidden");
     }
+}
+
+function formatTime(seconds) {
+    const m = Math.floor(seconds / 60).toString().padStart(2, '0');
+    const s = Math.floor(seconds % 60).toString().padStart(2, '0');
+    return `${m}:${s}`;
+}
+
+function updateTimerDisplay() {
+    if (!el.timerEl) return;
+    el.timerEl.textContent = formatTime(state.timerSeconds);
+}
+
+function updateLevelDisplay() {
+    if (!el.levelBadge) return;
+    el.levelBadge.textContent = getLevelByTime(state.timerSeconds);
+}
+
+function startTimer() {
+    stopTimer();
+    state.timerInterval = setInterval(() => {
+        state.timerSeconds += 1;
+        updateTimerDisplay();
+        updateLevelDisplay();
+    }, 1000);
+}
+
+function stopTimer() {
+    if (state.timerInterval) {
+        clearInterval(state.timerInterval);
+        state.timerInterval = null;
+    }
+}
+
+function showEndOverlay() {
+    if (!el.endOverlay) return;
+    if (el.summaryTime) {
+        el.summaryTime.textContent = `Zeit: ${formatTime(state.timerSeconds)}`;
+    }
+    if (el.summaryLevel) {
+        el.summaryLevel.textContent = `Level: ${getLevelByTime(state.timerSeconds)}`;
+    }
+    el.endOverlay.classList.remove("hidden");
+    el.endOverlay.setAttribute("aria-hidden", "false");
+}
+
+function hideEndOverlay() {
+    if (!el.endOverlay) return;
+    el.endOverlay.classList.add("hidden");
+    el.endOverlay.setAttribute("aria-hidden", "true");
 }
 
 function updateSelectionBox() {
@@ -176,6 +241,9 @@ function revealSolution() {
     state.board = deepCopyBoard(state.solution);
     setStatus("Lösung angezeigt. Spiel ist beendet.", "info");
     setHint("");
+    stopTimer();
+    updateLevelDisplay();
+    showEndOverlay();
     renderGrid();
     renderPad();
     updateSelectionBox();
@@ -207,6 +275,10 @@ function useHintOnce() {
         state.selectedCell = [row, col];
         setHint(`Tipp: In Feld (${row + 1}, ${col + 1}) ist die ${value} aktuell falsch.`);
         state.hintUsed = true;
+        state.timerSeconds += 30;
+        updateTimerDisplay();
+        updateLevelDisplay();
+        setHint(`${state.hintText} (+30s Strafzeit)`);
         setStatus("Tipp genutzt: Falsche Zahl gefunden.", "info");
         updateSelectionBox();
         renderGrid();
@@ -225,6 +297,10 @@ function useHintOnce() {
             state.selectedCell = [row, col];
             setHint(`Tipp: Reihe ${row + 1} ist leicht. In Spalte ${col + 1} gehört die ${value}.`);
             state.hintUsed = true;
+            state.timerSeconds += 30;
+            updateTimerDisplay();
+            updateLevelDisplay();
+            setHint(`${state.hintText} (+30s Strafzeit)`);
             setStatus("Tipp genutzt: Einfache Reihe gefunden.", "info");
             updateSelectionBox();
             renderGrid();
@@ -252,6 +328,9 @@ function checkIfCompleted() {
         state.locked = true;
         setStatus("Perfekt gelöst!", "info");
         setHint("Stark! Du hast das Sudoku korrekt gelöst.");
+        stopTimer();
+        updateLevelDisplay();
+        showEndOverlay();
     } else {
         setStatus("Noch nicht korrekt.", "info");
     }
@@ -272,6 +351,12 @@ function resetGameState(payload) {
     updateSelectionBox();
     renderGrid();
     renderPad();
+    hideEndOverlay();
+    // Reset and start timer
+    state.timerSeconds = 0;
+    updateTimerDisplay();
+    updateLevelDisplay();
+    startTimer();
 }
 
 async function loadGame(difficulty) {
@@ -298,6 +383,15 @@ function bindEvents() {
         await loadGame(el.difficultySelect.value);
     });
     el.clearBtn.addEventListener("click", clearSelectedCell);
+    if (el.overlayNewGame) {
+        el.overlayNewGame.addEventListener("click", async () => {
+            await loadGame(el.difficultySelect.value);
+            hideEndOverlay();
+        });
+    }
+    if (el.overlayClose) {
+        el.overlayClose.addEventListener("click", hideEndOverlay);
+    }
 
     window.addEventListener("keydown", (event) => {
         const targetTag = event.target?.tagName?.toLowerCase();
