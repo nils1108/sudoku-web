@@ -261,54 +261,31 @@ def render_board():
     selected = st.session_state.selected_cell
 
     st.markdown("### 🎯 Spielfeld")
+    st.caption("Tippe ein Feld an und setze unten die Zahl.")
 
-    # Build HTML for Sudoku grid with beautiful styling
-    html = '<div style="display:flex; justify-content:center; margin:30px 0;">'
-    html += '<table style="border-collapse:collapse; border:3px solid #2c3e50; background:#fffaf2; box-shadow:0 2px 8px rgba(0,0,0,0.1);">'
+    # Render grid using Streamlit buttons (no links, no page navigation)
+    grid_container = st.container()
+    with grid_container:
+        for row in range(GRID_SIZE):
+            cols = st.columns(GRID_SIZE, gap="small")
+            for col in range(GRID_SIZE):
+                value = board[row][col]
+                label = " " if value == 0 else str(value)
 
-    for row in range(GRID_SIZE):
-        html += '<tr>'
-        for col in range(GRID_SIZE):
-            value = board[row][col]
-            label = "" if value == 0 else str(value)
+                is_fixed = (row, col) in st.session_state.fixed_cells
+                is_selected = selected == (row, col)
 
-            is_fixed = (row, col) in st.session_state.fixed_cells
-            is_selected = selected == (row, col)
+                # Visual indicator in label for fixed/selected (kept minimal)
+                display_label = label
 
-            # Cell borders
-            border_right = "3px solid #2c3e50" if (col + 1) % BOX_SIZE == 0 else "1px solid #bdc3c7"
-            border_bottom = "3px solid #2c3e50" if (row + 1) % BOX_SIZE == 0 else "1px solid #bdc3c7"
+                disabled = st.session_state.game_locked
 
-            cell_color = "#f0f4f8" if is_fixed else "#fffaf2"
-            if is_selected:
-                cell_color = "#d8f3ee"
+                # Create a unique key for each cell
+                key = f"cell-{row}-{col}-{st.session_state.show_solution}"
 
-            cell_text_color = "#153e75" if (is_fixed or label) else "#999"
-
-            # Use plain links (query params) instead of inline JS onclick (Streamlit blocks JS)
-            html += f'''<td style="
-                width:60px; height:60px;
-                text-align:center; vertical-align:middle;
-                border-right:{border_right};
-                border-bottom:{border_bottom};
-                background-color:{cell_color};
-                cursor:pointer;
-                font-size:24px;
-                font-weight:bold;
-                color:{cell_text_color};
-                padding:0;
-                transition:background-color 0.2s;
-            ">
-                <a href="?r={row}&c={col}" target="_self" style="display:block; width:100%; height:100%; color:inherit; text-decoration:none;">{label}</a>
-            </td>'''
-
-        html += '</tr>'
-
-    html += '</table></div>'
-
-    st.markdown(html, unsafe_allow_html=True)
-
-    # No hidden buttons any more (we use query-params links in the HTML grid)
+                clicked = cols[col].button(display_label, key=key, use_container_width=True, disabled=disabled)
+                if clicked:
+                    set_selected_cell(row, col)
 
 
 def render_controls():
