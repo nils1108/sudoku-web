@@ -39,6 +39,7 @@ const el = {
 };
 
 function getLevelByTime(seconds) {
+    if (seconds < 60) return "Profi";
     if (seconds < 180) return "Meister";
     if (seconds < 420) return "Fortgeschritten";
     return "Anfänger";
