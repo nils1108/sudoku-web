@@ -275,8 +275,6 @@ def render_board():
             is_selected = selected == (row, col)
 
             display_label = label
-            if is_selected:
-                display_label = f"[{label}]"
 
             disabled = st.session_state.game_locked
             key = f"cell-{row}-{col}-{st.session_state.show_solution}"
@@ -321,24 +319,28 @@ def render_controls():
     if col_left.button("🗑️ Löschen", use_container_width=True, disabled=not editable_selected):
         clear_selected_cell()
 
-    keyboard_input = col_right.text_input(
-        "Tastatur",
-        value="",
-        max_chars=1,
-        disabled=not editable_selected,
-        label_visibility="collapsed",
-        placeholder="1-9, 0=löschen"
-    )
-    if keyboard_input:
-        try:
-            parsed = int(keyboard_input)
-        except Exception:
-            parsed = None
-        if parsed is not None and 0 <= parsed <= 9:
-            if parsed == 0:
-                clear_selected_cell()
-            else:
-                place_number(parsed)
+    with col_right:
+        with st.form(key="keyboard_form", clear_on_submit=True):
+            keyboard_input = st.text_input(
+                "Tastatur",
+                value="",
+                max_chars=1,
+                disabled=not editable_selected,
+                label_visibility="collapsed",
+                placeholder="1-9, 0=löschen",
+            )
+            submitted = st.form_submit_button("Eingabe übernehmen", use_container_width=True)
+
+        if submitted and keyboard_input:
+            try:
+                parsed = int(keyboard_input)
+            except Exception:
+                parsed = None
+            if parsed is not None and 0 <= parsed <= 9:
+                if parsed == 0:
+                    clear_selected_cell()
+                else:
+                    place_number(parsed)
 
 
 def main():
