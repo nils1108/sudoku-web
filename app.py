@@ -113,7 +113,6 @@ def generate_sudoku(difficulty_label):
 def init_state():
     defaults = {
         "difficulty": "Leicht",
-        "theme": "Light",
         "puzzle": None,
         "solution": None,
         "board": None,
@@ -263,6 +262,15 @@ def render_board():
     st.markdown("### 🎯 Spielfeld")
     st.caption("Tippe ein Feld an und setze unten die Zahl.")
 
+    css_board = """
+    <style>
+    [data-testid="stContainer"] > div {
+        background-color: #ffffff;
+    }
+    </style>
+    """
+    st.markdown(css_board, unsafe_allow_html=True)
+
     with st.container(border=True):
         for row in range(GRID_SIZE):
             cols = st.columns(9, gap="small")
@@ -279,6 +287,8 @@ def render_board():
                     label = f"{label}*"
 
                 disabled = st.session_state.game_locked or st.session_state.show_solution
+                
+                button_style = ""
                 if cols[col].button(
                     label,
                     key=f"cell-{row}-{col}",
@@ -337,17 +347,28 @@ def render_controls():
 
 
 def main():
-    st.set_page_config(page_title="Sudoku Studio", page_icon="🎮", layout="centered")
+    st.set_page_config(
+        page_title="Sudoku Studio",
+        page_icon="🎮",
+        layout="centered",
+        initial_sidebar_state="collapsed"
+    )
 
     init_state()
+
+    st.markdown("""
+    <style>
+    body { background-color: #ffffff; }
+    .main { background-color: #ffffff; }
+    [data-testid="stAppViewContainer"] { background-color: #ffffff; }
+    </style>
+    """, unsafe_allow_html=True)
 
     col1, col2 = st.columns([3, 1], gap="large")
     with col1:
         st.title("🎮 Sudoku Studio Web")
     with col2:
         st.write("")
-        theme = st.radio("🎨", ["Light", "Dark"], index=0 if st.session_state.theme == "Light" else 1, horizontal=True)
-        st.session_state.theme = theme
 
     if st.session_state.puzzle is None:
         start_new_game(st.session_state.difficulty)
@@ -360,29 +381,41 @@ def main():
             "Schwierigkeit",
             list(DIFFICULTIES.keys()),
             index=list(DIFFICULTIES.keys()).index(st.session_state.difficulty),
+            key="difficulty_select",
         )
         if difficulty != st.session_state.difficulty:
             start_new_game(difficulty)
 
     with top_right:
-        if st.button("🔄 Neues", use_container_width=True):
+        if st.button("🔄 Neues Spiel", use_container_width=True):
             start_new_game(st.session_state.difficulty)
 
     st.divider()
 
-    action_left, action_mid, action_right = st.columns(3, gap="small")
-    if action_left.button(
-        "👁️ Lösung", use_container_width=True, disabled=st.session_state.game_locked
-    ):
-        reveal_solution()
-    if action_mid.button(
+    col_tip, col_reset = st.columns(2, gap="small")
+    if col_tip.button(
         "💡 Tipp (1x)",
         use_container_width=True,
         disabled=st.session_state.hint_used or st.session_state.game_locked,
     ):
         use_hint_once()
-    if action_right.button("↻ Reset", use_container_width=True):
+    if col_reset.button("↻ Reset", use_container_width=True):
         start_new_game(st.session_state.difficulty)
+
+    st.markdown("**Anzeige-Modus:**")
+    show_sol_slider = st.slider(
+        "Raetsel ← → Loesung",
+        min_value=0,
+        max_value=1,
+        value=0 if not st.session_state.show_solution else 1,
+        step=1,
+        label_visibility="collapsed",
+    )
+    if show_sol_slider == 1 and not st.session_state.show_solution:
+        reveal_solution()
+    elif show_sol_slider == 0 and st.session_state.show_solution:
+        st.session_state.show_solution = False
+        st.session_state.game_locked = False
 
     st.divider()
 
