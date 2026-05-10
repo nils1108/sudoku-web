@@ -262,15 +262,6 @@ def render_board():
     st.markdown("### 🎯 Spielfeld")
     st.caption("Tippe ein Feld an und setze unten die Zahl.")
 
-    css_board = """
-    <style>
-    [data-testid="stContainer"] > div {
-        background-color: #ffffff;
-    }
-    </style>
-    """
-    st.markdown(css_board, unsafe_allow_html=True)
-
     with st.container(border=True):
         for row in range(GRID_SIZE):
             cols = st.columns(9, gap="small")
@@ -281,17 +272,19 @@ def render_board():
                 is_fixed = (row, col) in st.session_state.fixed_cells
                 is_selected = selected == (row, col)
 
-                if is_selected:
-                    label = f"[{label}]"
-                elif is_fixed and value != 0:
-                    label = f"{label}*"
-
                 disabled = st.session_state.game_locked or st.session_state.show_solution
                 
-                button_style = ""
+                # Determine button styling
+                if is_selected:
+                    button_key = f"cell-{row}-{col}-selected"
+                elif is_fixed and value != 0:
+                    button_key = f"cell-{row}-{col}-fixed"
+                else:
+                    button_key = f"cell-{row}-{col}"
+                
                 if cols[col].button(
                     label,
-                    key=f"cell-{row}-{col}",
+                    key=button_key,
                     use_container_width=True,
                     disabled=disabled,
                 ):
@@ -403,17 +396,19 @@ def main():
         start_new_game(st.session_state.difficulty)
 
     st.markdown("**Anzeige-Modus:**")
-    show_sol_slider = st.slider(
-        "Raetsel ← → Loesung",
-        min_value=0,
-        max_value=1,
-        value=0 if not st.session_state.show_solution else 1,
-        step=1,
-        label_visibility="collapsed",
-    )
-    if show_sol_slider == 1 and not st.session_state.show_solution:
+    col_toggle, col_label = st.columns([1, 3])
+    with col_toggle:
+        show_solution_toggle = st.toggle(
+            "Lösung anzeigen",
+            value=st.session_state.show_solution,
+            key="show_solution_toggle",
+        )
+    with col_label:
+        st.write("Rätsel" if not show_solution_toggle else "Lösung")
+    
+    if show_solution_toggle and not st.session_state.show_solution:
         reveal_solution()
-    elif show_sol_slider == 0 and st.session_state.show_solution:
+    elif not show_solution_toggle and st.session_state.show_solution:
         st.session_state.show_solution = False
         st.session_state.game_locked = False
 
