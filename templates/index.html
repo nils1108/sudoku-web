@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sudoku Studio Web</title>
+    <link rel="stylesheet" href="{{ url_for('static', path='styles.css') }}">
+</head>
+<body data-default-difficulty="{{ default_difficulty }}">
+    <div class="app-shell">
+        <header class="hero">
+            <div class="hero-title-row">
+                <div class="logo">🎮</div>
+                <div>
+                    <h1>Sudoku Studio Web</h1>
+                    <p>Kostenlose Web-Version für Handy und Desktop</p>
+                </div>
+            </div>
+        </header>
+
+        <section class="control-panel">
+            <div class="control-row">
+                <label class="field-group">
+                    <span>Schwierigkeit</span>
+                    <select id="difficulty-select" aria-label="Schwierigkeit">
+                        {% for difficulty in difficulty_options %}
+                        <option value="{{ difficulty }}" {% if difficulty == default_difficulty %}selected{% endif %}>{{ difficulty }}</option>
+                        {% endfor %}
+                    </select>
+                </label>
+                <button id="new-game-btn" class="primary-btn">🔄 Neues Spiel</button>
+            </div>
+
+            <div class="action-row">
+                <button id="hint-btn" class="secondary-btn">💡 Tipp (1x)</button>
+                <button id="solve-btn" class="secondary-btn">📋 Lösung</button>
+                <button id="reset-btn" class="secondary-btn">↻ Reset</button>
+            </div>
+
+            <div id="status-box" class="status info">Bereit</div>
+            <div id="hint-box" class="status hint hidden"></div>
+        </section>
+
+        <section class="board-section">
+            <div class="section-heading">🎯 Spielfeld</div>
+            <p class="section-subtitle">Tippe ein Feld an und setze unten die Zahl.</p>
+            <div id="sudoku-grid" class="sudoku-grid" aria-label="Sudoku Spielfeld"></div>
+        </section>
+
+        <section class="input-section">
+            <div class="section-heading">⌨️ Eingabe</div>
+            <div id="selection-box" class="status info">Wähle zuerst ein Feld aus.</div>
+            <div class="pad-label">Zahlenfeld:</div>
+            <div class="number-pad" id="number-pad"></div>
+            <div class="keyboard-row">
+                <button id="clear-btn" class="clear-btn">🗑️ Löschen</button>
+                <div class="keyboard-hint">Tastatur: 1-9, 0 oder Backspace zum Löschen</div>
+            </div>
+        </section>
+
+        <footer class="footer">
+            💡 Legende: Hellbeige = vorgegeben | Hellblau = ausgewählt
+        </footer>
+    </div>
+
+    <script src="{{ url_for('static', path='app.js') }}"></script>
+</body>
+</html>
