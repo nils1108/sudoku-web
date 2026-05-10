@@ -262,7 +262,47 @@ def render_board():
     st.markdown("### 🎯 Spielfeld")
     st.caption("Tippe ein Feld an und setze unten die Zahl.")
 
-    with st.container(border=True):
+    # CSS für schöne 3x3 Box-Grenzen
+    st.markdown("""
+    <style>
+    .sudoku-grid { 
+        display: inline-block; 
+        background: #fffaf2;
+        border: 3px solid #3e4c59;
+        border-collapse: collapse;
+    }
+    .sudoku-cell {
+        width: 50px;
+        height: 50px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        border: 1px solid #9aa5b1;
+        font-weight: bold;
+        cursor: pointer;
+        background: #fffaf2;
+        font-size: 18px;
+        color: #1f2933;
+    }
+    .sudoku-cell.given {
+        color: #153e75;
+        font-weight: bold;
+        background: #f0f4f8;
+    }
+    .sudoku-cell.selected {
+        background: #d8f3ee;
+        border: 2px solid #007f73;
+    }
+    .sudoku-row-3, .sudoku-row-6 {
+        border-bottom: 3px solid #3e4c59;
+    }
+    .sudoku-col-3, .sudoku-col-6 {
+        border-right: 3px solid #3e4c59;
+    }
+    </style>
+    """, unsafe_allow_html=True)
+
+    with st.container(border=False):
         for row in range(GRID_SIZE):
             cols = st.columns(9, gap="small")
             for col in range(GRID_SIZE):
@@ -274,14 +314,7 @@ def render_board():
 
                 disabled = st.session_state.game_locked or st.session_state.show_solution
                 
-                # Determine button styling
-                if is_selected:
-                    button_key = f"cell-{row}-{col}-selected"
-                elif is_fixed and value != 0:
-                    button_key = f"cell-{row}-{col}-fixed"
-                else:
-                    button_key = f"cell-{row}-{col}"
-                
+                button_key = f"cell-{row}-{col}-{value}"
                 if cols[col].button(
                     label,
                     key=button_key,
@@ -300,34 +333,33 @@ def render_controls():
     st.markdown("### ⌨️ Eingabe")
     
     if selected is None:
-        st.info("Waehle zuerst ein Feld aus.")
+        st.info("Wähle zuerst ein Feld aus.")
     else:
         row, col = selected
         if selected in st.session_state.fixed_cells:
-            st.info(f"Feld ({row + 1}, {col + 1}) ist vorgegeben und nicht aenderbar.")
+            st.info(f"Feld ({row + 1}, {col + 1}) ist vorgegeben und nicht änderbar.")
         else:
             st.success(f"Aktives Feld: ({row + 1}, {col + 1})")
 
     st.markdown("**Zahlenfeld:**")
-    with st.container(border=True):
-        pad_rows = [(1, 2, 3), (4, 5, 6), (7, 8, 9)]
-        for number_row in pad_rows:
-            cols = st.columns(3, gap="small")
-            for index, number in enumerate(number_row):
-                if cols[index].button(
-                    f"  {number}  ",
-                    key=f"num-{number}",
-                    use_container_width=True,
-                    disabled=not editable_selected,
-                ):
-                    place_number(number)
+    pad_rows = [(1, 2, 3), (4, 5, 6), (7, 8, 9)]
+    for number_row in pad_rows:
+        cols = st.columns(3, gap="small")
+        for index, number in enumerate(number_row):
+            if cols[index].button(
+                f"  {number}  ",
+                key=f"num-{number}",
+                use_container_width=True,
+                disabled=not editable_selected,
+            ):
+                place_number(number)
 
     left, right = st.columns(2, gap="small")
-    if left.button("🗑️ Loeschen", use_container_width=True, disabled=not editable_selected):
+    if left.button("🗑️ Löschen", use_container_width=True, disabled=not editable_selected):
         clear_selected_cell()
 
     keyboard_value = right.text_input(
-        "Tastatur (1-9, 0=loeschen)",
+        "Tastatur (1-9, 0=löschen)",
         value="",
         max_chars=1,
         disabled=not editable_selected,
@@ -349,27 +381,46 @@ def main():
 
     init_state()
 
+    # CSS für elegantes Design mit Beige/Weiß Farbschema
     st.markdown("""
     <style>
-    body { background-color: #ffffff; }
-    .main { background-color: #ffffff; }
-    [data-testid="stAppViewContainer"] { background-color: #ffffff; }
+    * { margin: 0; padding: 0; }
+    body, [data-testid="stAppViewContainer"], [data-testid="stMainBlockContainer"] {
+        background-color: #f5f0e6 !important;
+        color: #1f2933 !important;
+    }
+    [data-testid="stForm"], [data-testid="stContainer"] {
+        background-color: #f5f0e6 !important;
+    }
+    button {
+        background-color: #007f73 !important;
+        color: white !important;
+        border: none !important;
+        border-radius: 6px !important;
+    }
+    button:hover {
+        background-color: #005a53 !important;
+    }
+    .stSelectbox label, .stToggle label {
+        color: #1f2933 !important;
+        font-weight: bold !important;
+    }
+    h1, h2, h3 {
+        color: #1f2933 !important;
+    }
+    .stCaption, .stText {
+        color: #52606d !important;
+    }
     </style>
     """, unsafe_allow_html=True)
 
-    col1, col2 = st.columns([3, 1], gap="large")
-    with col1:
-        st.title("🎮 Sudoku Studio Web")
-    with col2:
-        st.write("")
-
-    if st.session_state.puzzle is None:
-        start_new_game(st.session_state.difficulty)
-
+    st.title("🎮 Sudoku Studio Web")
     st.caption("Kostenlose Web-Version für Handy und Desktop")
 
-    top_left, top_right = st.columns([2, 1], gap="small")
-    with top_left:
+    st.divider()
+
+    left_col, right_col = st.columns([2, 1], gap="medium")
+    with left_col:
         difficulty = st.selectbox(
             "Schwierigkeit",
             list(DIFFICULTIES.keys()),
@@ -379,43 +430,41 @@ def main():
         if difficulty != st.session_state.difficulty:
             start_new_game(difficulty)
 
-    with top_right:
+    with right_col:
         if st.button("🔄 Neues Spiel", use_container_width=True):
             start_new_game(st.session_state.difficulty)
 
     st.divider()
 
-    col_tip, col_reset = st.columns(2, gap="small")
-    if col_tip.button(
+    col_hint, col_solution, col_reset = st.columns(3, gap="small")
+    if col_hint.button(
         "💡 Tipp (1x)",
         use_container_width=True,
         disabled=st.session_state.hint_used or st.session_state.game_locked,
     ):
         use_hint_once()
+    
+    if col_solution.button(
+        "📋 Lösung",
+        use_container_width=True,
+        disabled=st.session_state.game_locked,
+    ):
+        reveal_solution()
+    
     if col_reset.button("↻ Reset", use_container_width=True):
         start_new_game(st.session_state.difficulty)
 
-    st.markdown("**Anzeige-Modus:**")
-    col_toggle, col_label = st.columns([1, 3])
-    with col_toggle:
-        show_solution_toggle = st.toggle(
-            "Lösung anzeigen",
-            value=st.session_state.show_solution,
-            key="show_solution_toggle",
-        )
-    with col_label:
-        st.write("Rätsel" if not show_solution_toggle else "Lösung")
-    
-    if show_solution_toggle and not st.session_state.show_solution:
-        reveal_solution()
-    elif not show_solution_toggle and st.session_state.show_solution:
-        st.session_state.show_solution = False
-        st.session_state.game_locked = False
-
     st.divider()
 
+    if st.session_state.puzzle is None:
+        start_new_game(st.session_state.difficulty)
+
     if st.session_state.status:
-        st.info(st.session_state.status)
+        if st.session_state.game_locked and "geloest" in st.session_state.status:
+            st.success(st.session_state.status)
+        else:
+            st.info(st.session_state.status)
+    
     if st.session_state.hint_text:
         st.warning(st.session_state.hint_text)
 
@@ -423,7 +472,7 @@ def main():
     render_controls()
 
     st.divider()
-    st.caption("💡 Legende: * = vorgegebenes Feld | [x] = ausgewähltes Feld")
+    st.caption("💡 Legende: Beige = vorgegeben | Hellblau = ausgewählt")
 
 
 if __name__ == "__main__":
