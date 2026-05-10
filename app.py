@@ -299,7 +299,7 @@ def render_board():
                 padding:0;
                 transition:background-color 0.2s;
             ">
-                <a href="?r={row}&c={col}" style="display:block; width:100%; height:100%; color:inherit; text-decoration:none;">{label}</a>
+                <a href="?r={row}&c={col}" target="_self" style="display:block; width:100%; height:100%; color:inherit; text-decoration:none;">{label}</a>
             </td>'''
 
         html += '</tr>'
