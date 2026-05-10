@@ -5,7 +5,7 @@ from pathlib import Path
 from fastapi import FastAPI, Query, Request
 from fastapi.responses import HTMLResponse
 from fastapi.staticfiles import StaticFiles
-from fastapi.templating import Jinja2Templates
+from jinja2 import Environment, FileSystemLoader, select_autoescape
 
 GRID_SIZE = 9
 BOX_SIZE = 3
@@ -18,8 +18,8 @@ DIFFICULTIES = {
 }
 
 app = FastAPI(title="Sudoku Studio")
-app.mount("/static", StaticFiles(directory=BASE_DIR / "static"), name="static")
-templates = Jinja2Templates(directory=BASE_DIR / "templates")
+app.mount("/static", StaticFiles(directory=str(BASE_DIR / "static")), name="static")
+env = Environment(loader=FileSystemLoader(str(BASE_DIR / "templates")), autoescape=select_autoescape(["html", "xml"]))
 
 
 def normalize_difficulty(difficulty_label: str) -> str:
@@ -132,14 +132,14 @@ def generate_sudoku(difficulty_label: str):
 
 @app.get("/", response_class=HTMLResponse)
 def index(request: Request):
-    return templates.TemplateResponse(
-        "index.html",
-        {
-            "request": request,
-            "difficulty_options": list(DIFFICULTIES.keys()),
-            "default_difficulty": "Leicht",
-        },
+    template = env.get_template("index.html")
+    html = template.render(
+        request=request,
+        difficulty_options=list(DIFFICULTIES.keys()),
+        default_difficulty="Leicht",
+        url_for=lambda name, **kw: request.url_for(name, **kw),
     )
+    return HTMLResponse(html)
 
 
 @app.get("/api/new-game")
