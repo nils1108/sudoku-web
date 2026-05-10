@@ -376,15 +376,26 @@ def main():
     init_state()
 
     # Handle cell selection via query params (links from the HTML grid)
-    params = st.experimental_get_query_params()
-    if "r" in params and "c" in params:
+    params = {}
+    try:
+        if hasattr(st, "experimental_get_query_params"):
+            params = st.experimental_get_query_params() or {}
+    except Exception:
+        # Some Streamlit deployments may not expose query param helpers
+        params = {}
+
+    if params and "r" in params and "c" in params:
         try:
             r = int(params.get("r")[0])
             c = int(params.get("c")[0])
             if 0 <= r < GRID_SIZE and 0 <= c < GRID_SIZE:
                 set_selected_cell(r, c)
-            # clear query params to avoid repeated selection on rerun
-            st.experimental_set_query_params()
+            # clear query params to avoid repeated selection on rerun (best-effort)
+            try:
+                if hasattr(st, "experimental_set_query_params"):
+                    st.experimental_set_query_params()
+            except Exception:
+                pass
         except Exception:
             # ignore malformed params
             pass
