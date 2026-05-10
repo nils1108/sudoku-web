@@ -156,8 +156,8 @@ class SudokuApp:
 		self.colors = {
 			"bg": "#f5f0e6",
 			"panel": "#fffaf2",
-			"accent": "#007f73",
-			"accent_dark": "#005a53",
+			"accent": "#2b5d8a",
+			"accent_dark": "#1e3956",
 			"text": "#1f2933",
 			"subtext": "#52606d",
 			"given": "#153e75",
@@ -252,7 +252,6 @@ class SudokuApp:
 			font=("Trebuchet MS", 10, "bold"),
 			fg="#264653",
 			bg="#fde8c8",
-			activebackground="#f8d9a8",
 			activeforeground="#264653",
 			relief="flat",
 			cursor="hand2",
@@ -525,7 +524,7 @@ class SudokuApp:
 			y1 = padding + row * cell_size
 			x2 = x1 + cell_size
 			y2 = y1 + cell_size
-			self.canvas.create_rectangle(x1, y1, x2, y2, outline="#007f73", width=3)
+			self.canvas.create_rectangle(x1, y1, x2, y2, outline="#2b5d8a", width=3)
 
 	def on_canvas_click(self, event):
 		if self.current_board is None:
@@ -745,8 +744,8 @@ class SudokuApp:
 			text="Neues Spiel",
 			font=("Trebuchet MS", 11, "bold"),
 			fg="white",
-			bg="#007f73",
-			activebackground="#005a53",
+			bg="#2b5d8a",
+			activebackground="#1e3956",
 			activeforeground="white",
 			relief="flat",
 			cursor="hand2",

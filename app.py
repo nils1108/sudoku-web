@@ -393,14 +393,14 @@ def main():
         color: #1f2933 !important;
     }
     button {
-        background-color: #007f73 !important;
+        background-color: #2b5d8a !important;
         color: white !important;
         border: none !important;
         border-radius: 4px !important;
         font-weight: bold !important;
     }
     button:hover {
-        background-color: #005a53 !important;
+        background-color: #1e3956 !important;
     }
     .stInfo, .stSuccess, .stWarning {
         background-color: #fffaf2 !important;
